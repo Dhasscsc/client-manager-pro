@@ -1,0 +1,2223 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>பங்குச்சந்தை மேலாளர் PRO - Stock Market Manager</title>
+    
+    <!-- Chart.js for graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- html2pdf for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --info: #17a2b8;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+            --border-radius: 12px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Tahoma', Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2980 0%, #26d0ce 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        /* Header */
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: var(--border-radius);
+            margin-bottom: 25px;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo i {
+            font-size: 2.5rem;
+            color: var(--primary);
+        }
+        
+        .logo h1 {
+            color: var(--primary);
+            font-size: 2rem;
+        }
+        
+        .logo span {
+            color: var(--secondary);
+        }
+        
+        .stats-bar {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-card {
+            background: var(--light);
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-align: center;
+            min-width: 150px;
+        }
+        
+        .stat-card h3 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card.profit h3 { color: var(--success); }
+        .stat-card.loss h3 { color: var(--danger); }
+        .stat-card.balance h3 { color: var(--primary); }
+        
+        /* Main Layout */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 25px;
+        }
+        
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Left Panel */
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        /* Stocks List */
+        .stocks-section {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--shadow);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .section-header h2 {
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        
+        .btn-primary {
+            background: var(--secondary);
+            color: white;
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+        
+        .btn-info {
+            background: var(--info);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+        
+        /* Stocks Grid */
+        .stocks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .stock-card {
+            background: white;
+            border: 2px solid var(--light);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stock-card:hover {
+            border-color: var(--secondary);
+            box-shadow: var(--shadow);
+            transform: translateY(-5px);
+        }
+        
+        .stock-card.active {
+            border-color: var(--success);
+        }
+        
+        .stock-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .stock-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .stock-symbol {
+            background: var(--secondary);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        
+        .stock-price {
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-align: center;
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 8px;
+            background: var(--light);
+        }
+        
+        .stock-profit { color: var(--success); }
+        .stock-loss { color: var(--danger); }
+        
+        .stock-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+        
+        .stock-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            flex: 1;
+            min-width: 70px;
+        }
+        
+        /* Transactions */
+        .transactions-section {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--shadow);
+        }
+        
+        .transactions-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .transactions-table th {
+            background: var(--primary);
+            color: white;
+            padding: 12px 15px;
+            text-align: left;
+        }
+        
+        .transactions-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--light);
+        }
+        
+        .transactions-table tr:hover {
+            background: #f9f9f9;
+        }
+        
+        .profit-row td:first-child { border-left: 4px solid var(--success); }
+        .loss-row td:first-child { border-left: 4px solid var(--danger); }
+        
+        /* Right Panel */
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        /* Dashboard Cards */
+        .dashboard-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .dashboard-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+        }
+        
+        .dashboard-card h3 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* Charts */
+        .chart-container {
+            height: 200px;
+            margin-top: 15px;
+        }
+        
+        /* Form Card */
+        .form-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--shadow);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--light);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--secondary);
+        }
+        
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 600px;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--shadow);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h2 {
+            color: var(--primary);
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        /* Import/Export Section */
+        .import-export-section {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--shadow);
+        }
+        
+        .file-input-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        
+        .file-input {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .file-label {
+            display: block;
+            padding: 15px;
+            background: var(--light);
+            border: 2px dashed var(--secondary);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .file-label:hover {
+            background: #e3f2fd;
+        }
+        
+        /* Print Styles */
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            
+            .container {
+                width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            
+            .stock-card {
+                break-inside: avoid;
+                border: 1px solid #000;
+                margin-bottom: 20px;
+            }
+            
+            .transactions-table {
+                font-size: 12px;
+            }
+        }
+        
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        /* Tamil Font Support */
+        .tamil-text {
+            font-family: 'Latha', 'Tahoma', sans-serif;
+        }
+        
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--success);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+        }
+        
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .toast.error {
+            background: var(--danger);
+        }
+        
+        .toast.warning {
+            background: var(--warning);
+        }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid var(--light);
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            border-bottom-color: var(--secondary);
+            color: var(--secondary);
+            font-weight: 600;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .stocks-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .stats-bar {
+                justify-content: center;
+            }
+            
+            .btn {
+                font-size: 12px;
+                padding: 8px 16px;
+            }
+        }
+        
+        /* Stock-specific styles */
+        .stock-company {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .stock-change {
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        
+        .stock-change.positive { color: var(--success); }
+        .stock-change.negative { color: var(--danger); }
+        
+        .category-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            background: var(--light);
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header fade-in">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <div>
+                    <h1 class="tamil-text">பங்குச்சந்தை மேலாளர் PRO</h1>
+                    <p class="tamil-text">Stock Market Manager Professional</p>
+                </div>
+            </div>
+            
+            <div class="stats-bar">
+                <div class="stat-card profit">
+                    <p class="tamil-text">மொத்த இலாபம்</p>
+                    <h3 id="totalProfit">₹0</h3>
+                </div>
+                <div class="stat-card loss">
+                    <p class="tamil-text">மொத்த நஷ்டம்</p>
+                    <h3 id="totalLoss">₹0</h3>
+                </div>
+                <div class="stat-card balance">
+                    <p class="tamil-text">மொத்த மீதி</p>
+                    <h3 id="totalBalance">₹0</h3>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Left Panel -->
+            <div class="left-panel">
+                <!-- Stocks Section -->
+                <section class="stocks-section fade-in">
+                    <div class="section-header">
+                        <h2 class="tamil-text">பங்குகள்</h2>
+                        <div class="stock-buttons">
+                            <button class="btn btn-primary" onclick="openStockModal()">
+                                <i class="fas fa-plus"></i> புதிய பங்கு
+                            </button>
+                            <button class="btn btn-info" onclick="showImportExportModal()">
+                                <i class="fas fa-file-import"></i> இறக்குமதி/ஏற்றுமதி
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="stocks-grid" id="stocksContainer">
+                        <!-- Stocks will be loaded here dynamically -->
+                    </div>
+                </section>
+                
+                <!-- Transactions Section -->
+                <section class="transactions-section fade-in">
+                    <div class="tabs">
+                        <div class="tab active" onclick="switchTab('all-transactions')">அனைத்து பரிவர்த்தனைகள்</div>
+                        <div class="tab" onclick="switchTab('stock-transactions')">தற்போதைய பங்கு</div>
+                    </div>
+                    
+                    <div class="tab-content active" id="all-transactions">
+                        <div class="section-header">
+                            <h3 class="tamil-text">அனைத்து பரிவர்த்தனைகள்</h3>
+                            <button class="btn btn-success" onclick="openTransactionModal()">
+                                <i class="fas fa-plus"></i> புதிய பரிவர்த்தனை
+                            </button>
+                        </div>
+                        
+                        <table class="transactions-table">
+                            <thead>
+                                <tr>
+                                    <th class="tamil-text">தேதி</th>
+                                    <th class="tamil-text">பங்கு</th>
+                                    <th class="tamil-text">விவரம்</th>
+                                    <th class="tamil-text">இலாபம்</th>
+                                    <th class="tamil-text">நஷ்டம்</th>
+                                    <th class="tamil-text">செயல்கள்</th>
+                                </tr>
+                            </thead>
+                            <tbody id="allTransactionsTable">
+                                <!-- All transactions will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="tab-content" id="stock-transactions">
+                        <div class="section-header">
+                            <h3 class="tamil-text" id="currentStockTitle">தற்போதைய பங்கு பரிவர்த்தனைகள்</h3>
+                            <button class="btn btn-success" onclick="openTransactionModal()">
+                                <i class="fas fa-plus"></i> புதிய பரிவர்த்தனை
+                            </button>
+                        </div>
+                        
+                        <table class="transactions-table">
+                            <thead>
+                                <tr>
+                                    <th class="tamil-text">தேதி</th>
+                                    <th class="tamil-text">விவரம்</th>
+                                    <th class="tamil-text">இலாபம்</th>
+                                    <th class="tamil-text">நஷ்டம்</th>
+                                    <th class="tamil-text">மீதி</th>
+                                    <th class="tamil-text">செயல்கள்</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stockTransactionsTable">
+                                <!-- Stock transactions will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+            
+            <!-- Right Panel -->
+            <div class="right-panel">
+                <!-- Dashboard Cards -->
+                <div class="dashboard-cards">
+                    <!-- Summary Card -->
+                    <div class="dashboard-card fade-in">
+                        <h3 class="tamil-text"><i class="fas fa-chart-pie"></i> சுருக்கம்</h3>
+                        <div class="summary-details">
+                            <div class="form-group">
+                                <p class="tamil-text"><strong>மொத்த பங்குகள்:</strong> <span id="totalStocks">0</span></p>
+                                <p class="tamil-text"><strong>செயலில் உள்ள பங்கு:</strong> <span id="activeStockName">-</span></p>
+                                <p class="tamil-text"><strong>இன்றைய பரிவர்த்தனைகள்:</strong> <span id="todayTransactions">0</span></p>
+                                <p class="tamil-text"><strong>கடைசி புதுப்பிப்பு:</strong> <span id="lastUpdated">-</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="dashboard-card fade-in">
+                        <h3 class="tamil-text"><i class="fas fa-bolt"></i> விரைவு செயல்கள்</h3>
+                        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+                            <button class="btn btn-primary btn-small" onclick="openStockModal()">
+                                <i class="fas fa-chart-line"></i> பங்கு சேர்
+                            </button>
+                            <button class="btn btn-success btn-small" onclick="openTransactionModal()">
+                                <i class="fas fa-exchange-alt"></i> பரிவர்த்தனை சேர்
+                            </button>
+                            <button class="btn btn-warning btn-small" onclick="generatePDFReport()">
+                                <i class="fas fa-file-pdf"></i> PDF ரிப்போர்ட்
+                            </button>
+                            <button class="btn btn-info btn-small" onclick="shareViaWhatsApp()">
+                                <i class="fab fa-whatsapp"></i> WhatsApp-ல் அனுப்பு
+                            </button>
+                            <button class="btn btn-small" onclick="printReport()" style="background: var(--primary); color: white;">
+                                <i class="fas fa-print"></i> அச்சிடு
+                            </button>
+                            <button class="btn btn-danger btn-small" onclick="clearAllData()">
+                                <i class="fas fa-trash"></i> அனைத்தும் நீக்கு
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Charts -->
+                    <div class="dashboard-card fade-in">
+                        <h3 class="tamil-text"><i class="fas fa-chart-bar"></i> பங்கு விளக்கப்படம்</h3>
+                        <div class="chart-container">
+                            <canvas id="financeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">செயல்பாடு வெற்றிகரமாக!</span>
+    </div>
+    
+    <!-- Stock Modal -->
+    <div class="modal" id="stockModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="tamil-text" id="stockModalTitle">புதிய பங்கு</h2>
+                <button class="close-modal" onclick="closeStockModal()">&times;</button>
+            </div>
+            <form id="stockForm">
+                <div class="form-group">
+                    <label class="tamil-text" for="stockName">பங்கு பெயர் *</label>
+                    <input type="text" id="stockName" class="form-control" required placeholder="எ.கா: டாடா ஸ்டீல்">
+                </div>
+                
+                <div class="form-group">
+                    <label class="tamil-text" for="stockSymbol">பங்கு சின்னம் *</label>
+                    <input type="text" id="stockSymbol" class="form-control" required placeholder="எ.கா: TATASTEEL" style="text-transform: uppercase;">
+                </div>
+                
+                <div class="form-group">
+                    <label class="tamil-text" for="companyName">நிறுவனம்</label>
+                    <input type="text" id="companyName" class="form-control" placeholder="நிறுவனத்தின் பெயர்">
+                </div>
+                
+                <div class="form-group">
+                    <label class="tamil-text" for="initialInvestment">ஆரம்ப முதலீடு</label>
+                    <input type="number" id="initialInvestment" class="form-control" value="0" step="0.01">
+                </div>
+                
+                <div class="form-group">
+                    <label class="tamil-text" for="stockColor">பங்கு நிறம்</label>
+                    <input type="color" id="stockColor" class="form-control" value="#3498db">
+                </div>
+                
+                <div class="form-group">
+                    <label class="tamil-text" for="stockCategory">வகை</label>
+                    <select id="stockCategory" class="form-control">
+                        <option value="">தேர்ந்தெடுக்கவும்</option>
+                        <option value="IT">IT</option>
+                        <option value="வங்கி">வங்கி</option>
+                        <option value="ஆட்டோமொபைல்">ஆட்டோமொபைல்</option>
+                        <option value="மருந்து">மருந்து</option>
+                        <option value="எரிசக்தி">எரிசக்தி</option>
+                        <option value="FMCG">FMCG</option>
+                        <option value="இரும்பு">இரும்பு</option>
+                        <option value="தொலைத்தொடர்பு">தொலைத்தொடர்பு</option>
+                        <option value="கச்சாப் பொருட்கள்">கச்சாப் பொருட்கள்</option>
+                        <option value="மற்றவை">மற்றவை</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="tamil-text" for="stockDescription">விளக்கம்</label>
+                    <textarea id="stockDescription" class="form-control" rows="3" placeholder="பங்கு பற்றிய குறிப்புகள்"></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 25px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        <i class="fas fa-save"></i> சேமிக்கவும்
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="closeStockModal()" style="flex: 1;">
+                        <i class="fas fa-times"></i> ரத்து
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Transaction Modal -->
+    <div class="modal" id="transactionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="tamil-text" id="transactionModalTitle">புதிய பரிவர்த்தனை</h2>
+                <button class="close-modal" onclick="closeTransactionModal()">&times;</button>
+            </div>
+            <form id="transactionForm">
+                <div class="form-group">
+                    <label class="tamil-text" for="transactionStock">பங்கு *</label>
+                    <select id="transactionStock" class="form-control" required>
+                        <!-- Stocks will be loaded here -->
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="tamil-text" for="transactionDate">தேதி *</label>
+                    <input type="date" id="transactionDate" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="tamil-text" for="transactionDescription">விவரம் *</label>
+                    <input type="text" id="transactionDescription" class="form-control" required placeholder="பரிவர்த்தனை விவரம்">
+                </div>
+                
+                <div class="form-group">
+                    <label class="tamil-text" for="transactionAmount">தொகை *</label>
+                    <input type="number" id="transactionAmount" class="form-control" required step="0.01" min="0">
+                </div>
+                
+                <div class="form-group">
+                    <label class="tamil-text">வகை *</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="transactionType" value="profit" checked>
+                            <span class="tamil-text">இலாபம்</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="transactionType" value="loss">
+                            <span class="tamil-text">நஷ்டம்</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="transactionType" value="investment">
+                            <span class="tamil-text">முதலீடு</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="transactionType" value="withdrawal">
+                            <span class="tamil-text">பணம் எடுத்தல்</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="tamil-text" for="transactionCategory">வகைப்பாடு</label>
+                    <select id="transactionCategory" class="form-control">
+                        <option value="">தேர்ந்தெடுக்கவும்</option>
+                        <option value="மூலதன இலாபம்">மூலதன இலாபம்</option>
+                        <option value="லாபப் பங்கு">லாபப் பங்கு</option>
+                        <option value="வட்டி">வட்டி</option>
+                        <option value="பங்கு விற்பனை">பங்கு விற்பனை</option>
+                        <option value="பங்கு வாங்குதல்">பங்கு வாங்குதல்</option>
+                        <option value="தரகு">தரகு</option>
+                        <option value="வரி">வரி</option>
+                        <option value="மற்றவை">மற்றவை</option>
+                    </select>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 25px;">
+                    <button type="submit" class="btn btn-success" style="flex: 1;">
+                        <i class="fas fa-check"></i> சேர்க்கவும்
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="closeTransactionModal()" style="flex: 1;">
+                        <i class="fas fa-times"></i> ரத்து
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Import/Export Modal -->
+    <div class="modal" id="importExportModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="tamil-text">இறக்குமதி / ஏற்றுமதி</h2>
+                <button class="close-modal" onclick="closeImportExportModal()">&times;</button>
+            </div>
+            
+            <div class="tabs" style="margin-top: 20px;">
+                <div class="tab active" onclick="switchImportExportTab('export')">ஏற்றுமதி</div>
+                <div class="tab" onclick="switchImportExportTab('import')">இறக்குமதி</div>
+                <div class="tab" onclick="switchImportExportTab('backup')">காப்புப்பிரதி</div>
+            </div>
+            
+            <!-- Export Tab -->
+            <div class="tab-content active" id="export-tab">
+                <h3 class="tamil-text" style="margin: 20px 0;"><i class="fas fa-download"></i> தரவு ஏற்றுமதி</h3>
+                <p class="tamil-text" style="margin-bottom: 20px; color: #666;">
+                    உங்கள் அனைத்து பங்கு மற்றும் பரிவர்த்தனை தரவை JSON கோப்பாக பதிவிறக்கம் செய்யலாம்.
+                </p>
+                
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <button class="btn btn-primary" onclick="exportAllData()">
+                        <i class="fas fa-file-download"></i> அனைத்து தரவையும் ஏற்றுமதி செய்
+                    </button>
+                    
+                    <button class="btn btn-success" onclick="exportCurrentStockPDF()">
+                        <i class="fas fa-file-pdf"></i> தற்போதைய பங்கு PDF
+                    </button>
+                    
+                    <button class="btn btn-warning" onclick="exportAllStocksPDF()">
+                        <i class="fas fa-file-pdf"></i> அனைத்து பங்குகள் PDF
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Import Tab -->
+            <div class="tab-content" id="import-tab">
+                <h3 class="tamil-text" style="margin: 20px 0;"><i class="fas fa-upload"></i> தரவு இறக்குமதி</h3>
+                <p class="tamil-text" style="margin-bottom: 20px; color: #666;">
+                    முன்பு ஏற்றுமதி செய்த JSON கோப்பை இறக்குமதி செய்யலாம்.
+                </p>
+                
+                <div class="file-input-container">
+                    <input type="file" id="importFile" class="file-input" accept=".json">
+                    <label for="importFile" class="file-label">
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                        <p class="tamil-text">JSON கோப்பை இங்கே இழுத்து விடவும் அல்லது கிளிக் செய்யவும்</p>
+                        <small style="color: #666;">.json கோப்புகள் மட்டும்</small>
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label class="tamil-text">
+                        <input type="checkbox" id="replaceData" checked>
+                        தற்போதைய தரவை மாற்று
+                    </label>
+                    <small style="color: #666; display: block; margin-top: 5px;">
+                        ✓ இது உங்கள் தற்போதைய தரவை மாற்றும். காப்புப்பிரதி எடுத்த பிறகு செய்யவும்.
+                    </small>
+                </div>
+                
+                <button class="btn btn-success" onclick="importData()" style="width: 100%; margin-top: 20px;">
+                    <i class="fas fa-file-import"></i> தரவு இறக்குமதி செய்
+                </button>
+            </div>
+            
+            <!-- Backup Tab -->
+            <div class="tab-content" id="backup-tab">
+                <h3 class="tamil-text" style="margin: 20px 0;"><i class="fas fa-database"></i> தரவு காப்புப்பிரதி</h3>
+                <p class="tamil-text" style="margin-bottom: 20px; color: #666;">
+                    உங்கள் தரவின் காப்புப்பிரதியை எடுக்கவும் அல்லது மீட்டெடுக்கவும்.
+                </p>
+                
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <button class="btn btn-primary" onclick="createBackup()">
+                        <i class="fas fa-save"></i> காப்புப்பிரதி எடு
+                    </button>
+                    
+                    <button class="btn btn-warning" onclick="restoreBackup()">
+                        <i class="fas fa-undo"></i> காப்புப்பிரதியிலிருந்து மீட்டெடு
+                    </button>
+                    
+                    <button class="btn btn-info" onclick="viewBackupInfo()">
+                        <i class="fas fa-info-circle"></i> காப்புப்பிரதி தகவல்
+                    </button>
+                </div>
+                
+                <div id="backupInfo" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; display: none;">
+                    <!-- Backup info will be shown here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Application State
+        let stocks = [];
+        let transactions = [];
+        let currentStockId = null;
+        let financeChart = null;
+        let lastUpdated = new Date();
+        
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            setupDate();
+            renderStocks();
+            renderAllTransactions();
+            renderStockTransactions();
+            updateDashboard();
+            initializeCharts();
+            updateLastUpdated();
+            
+            // Setup file import
+            document.getElementById('importFile').addEventListener('change', handleFileSelect);
+        });
+        
+        // Set today's date as default
+        function setupDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('transactionDate').value = today;
+        }
+        
+        // Load data from localStorage
+        function loadData() {
+            try {
+                const savedStocks = localStorage.getItem('tamilStocksPro');
+                const savedTransactions = localStorage.getItem('tamilStockTransactionsPro');
+                
+                if (savedStocks) {
+                    stocks = JSON.parse(savedStocks);
+                    stocks = stocks.map(stock => ({
+                        id: stock.id || Date.now().toString(),
+                        name: stock.name || 'பெயர் இல்லை',
+                        symbol: stock.symbol || '',
+                        company: stock.company || '',
+                        initialInvestment: parseFloat(stock.initialInvestment) || 0,
+                        color: stock.color || '#3498db',
+                        category: stock.category || '',
+                        description: stock.description || '',
+                        createdAt: stock.createdAt || new Date().toISOString(),
+                        updatedAt: stock.updatedAt || new Date().toISOString()
+                    }));
+                }
+                
+                if (savedTransactions) {
+                    transactions = JSON.parse(savedTransactions);
+                    transactions = transactions.map(transaction => ({
+                        id: transaction.id || Date.now().toString(),
+                        stockId: transaction.stockId || (stocks[0]?.id || ''),
+                        date: transaction.date || new Date().toISOString().split('T')[0],
+                        description: transaction.description || 'விவரம் இல்லை',
+                        amount: parseFloat(transaction.amount) || 0,
+                        type: transaction.type || 'profit',
+                        category: transaction.category || '',
+                        createdAt: transaction.createdAt || new Date().toISOString(),
+                        updatedAt: transaction.updatedAt || new Date().toISOString()
+                    }));
+                }
+                
+                if (stocks.length > 0 && !currentStockId) {
+                    currentStockId = stocks[0].id;
+                }
+                
+                showToast('தரவு ஏற்றப்பட்டது!', 'success');
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showToast('தரவு ஏற்றத்தில் பிழை!', 'error');
+            }
+        }
+        
+        // Save data to localStorage
+        function saveData() {
+            try {
+                localStorage.setItem('tamilStocksPro', JSON.stringify(stocks));
+                localStorage.setItem('tamilStockTransactionsPro', JSON.stringify(transactions));
+                updateLastUpdated();
+                showToast('தரவு சேமிக்கப்பட்டது!', 'success');
+            } catch (error) {
+                console.error('Error saving data:', error);
+                showToast('தரவு சேமிப்பில் பிழை!', 'error');
+            }
+        }
+        
+        // Stock Functions
+        function openStockModal(stockId = null) {
+            const modal = document.getElementById('stockModal');
+            const title = document.getElementById('stockModalTitle');
+            const form = document.getElementById('stockForm');
+            
+            if (stockId) {
+                title.textContent = 'பங்கு திருத்தம்';
+                const stock = stocks.find(s => s.id === stockId);
+                if (stock) {
+                    document.getElementById('stockName').value = stock.name;
+                    document.getElementById('stockSymbol').value = stock.symbol;
+                    document.getElementById('companyName').value = stock.company || '';
+                    document.getElementById('initialInvestment').value = stock.initialInvestment;
+                    document.getElementById('stockColor').value = stock.color;
+                    document.getElementById('stockCategory').value = stock.category || '';
+                    document.getElementById('stockDescription').value = stock.description || '';
+                    
+                    form.dataset.editId = stockId;
+                }
+            } else {
+                title.textContent = 'புதிய பங்கு';
+                form.reset();
+                document.getElementById('stockColor').value = '#3498db';
+                document.getElementById('initialInvestment').value = '0';
+                delete form.dataset.editId;
+            }
+            
+            modal.style.display = 'flex';
+        }
+        
+        function closeStockModal() {
+            document.getElementById('stockModal').style.display = 'none';
+            document.getElementById('stockForm').reset();
+        }
+        
+        // Handle stock form submission
+        document.getElementById('stockForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const form = e.target;
+            const stockId = form.dataset.editId || 'stock_' + Date.now();
+            const isEditMode = !!form.dataset.editId;
+            
+            const stock = {
+                id: stockId,
+                name: document.getElementById('stockName').value.trim(),
+                symbol: document.getElementById('stockSymbol').value.trim().toUpperCase(),
+                company: document.getElementById('companyName').value.trim(),
+                initialInvestment: parseFloat(document.getElementById('initialInvestment').value) || 0,
+                color: document.getElementById('stockColor').value,
+                category: document.getElementById('stockCategory').value,
+                description: document.getElementById('stockDescription').value.trim(),
+                createdAt: isEditMode ? stocks.find(s => s.id === stockId)?.createdAt || new Date().toISOString() : new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            
+            if (!stock.name || !stock.symbol) {
+                showToast('பங்கு பெயர் மற்றும் சின்னம் கட்டாயம்!', 'error');
+                return;
+            }
+            
+            if (isEditMode) {
+                const index = stocks.findIndex(s => s.id === stockId);
+                if (index !== -1) {
+                    stocks[index] = stock;
+                }
+            } else {
+                stocks.push(stock);
+                if (stocks.length === 1) {
+                    currentStockId = stockId;
+                }
+            }
+            
+            saveData();
+            renderStocks();
+            closeStockModal();
+            updateDashboard();
+            
+            showToast(isEditMode ? 'பங்கு திருத்தப்பட்டது!' : 'பங்கு சேர்க்கப்பட்டது!', 'success');
+        });
+        
+        // Transaction Functions
+        function openTransactionModal(transactionId = null) {
+            const modal = document.getElementById('transactionModal');
+            const title = document.getElementById('transactionModalTitle');
+            const stockSelect = document.getElementById('transactionStock');
+            
+            stockSelect.innerHTML = '';
+            stocks.forEach(stock => {
+                const option = document.createElement('option');
+                option.value = stock.id;
+                option.textContent = `${stock.name} (${stock.symbol})`;
+                if (stock.id === currentStockId) {
+                    option.selected = true;
+                }
+                stockSelect.appendChild(option);
+            });
+            
+            if (transactionId) {
+                title.textContent = 'பரிவர்த்தனை திருத்தம்';
+                const transaction = transactions.find(t => t.id === transactionId);
+                if (transaction) {
+                    document.getElementById('transactionDate').value = transaction.date;
+                    document.getElementById('transactionDescription').value = transaction.description;
+                    document.getElementById('transactionAmount').value = transaction.amount;
+                    document.getElementById('transactionStock').value = transaction.stockId;
+                    document.querySelector(`input[name="transactionType"][value="${transaction.type}"]`).checked = true;
+                    document.getElementById('transactionCategory').value = transaction.category || '';
+                    
+                    document.getElementById('transactionForm').dataset.editId = transactionId;
+                }
+            } else {
+                title.textContent = 'புதிய பரிவர்த்தனை';
+                setupDate();
+                document.getElementById('transactionForm').reset();
+                delete document.getElementById('transactionForm').dataset.editId;
+                
+                if (currentStockId) {
+                    document.getElementById('transactionStock').value = currentStockId;
+                }
+            }
+            
+            modal.style.display = 'flex';
+        }
+        
+        function closeTransactionModal() {
+            document.getElementById('transactionModal').style.display = 'none';
+            document.getElementById('transactionForm').reset();
+            setupDate();
+        }
+        
+        // Handle transaction form submission
+        document.getElementById('transactionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const form = e.target;
+            const transactionId = form.dataset.editId || 'trx_' + Date.now();
+            const isEditMode = !!form.dataset.editId;
+            
+            const selectedStockId = document.getElementById('transactionStock').value;
+            if (!selectedStockId) {
+                showToast('பங்கு தேர்ந்தெடுக்கவும்!', 'error');
+                return;
+            }
+            
+            const transaction = {
+                id: transactionId,
+                stockId: selectedStockId,
+                date: document.getElementById('transactionDate').value,
+                description: document.getElementById('transactionDescription').value.trim(),
+                amount: parseFloat(document.getElementById('transactionAmount').value) || 0,
+                type: document.querySelector('input[name="transactionType"]:checked').value,
+                category: document.getElementById('transactionCategory').value,
+                createdAt: isEditMode ? transactions.find(t => t.id === transactionId)?.createdAt || new Date().toISOString() : new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            
+            if (!transaction.description) {
+                showToast('விவரம் கட்டாயம்!', 'error');
+                return;
+            }
+            
+            if (transaction.amount <= 0) {
+                showToast('தொகை சரியாக இல்லை!', 'error');
+                return;
+            }
+            
+            if (isEditMode) {
+                const index = transactions.findIndex(t => t.id === transactionId);
+                if (index !== -1) {
+                    transactions[index] = transaction;
+                }
+            } else {
+                transactions.push(transaction);
+            }
+            
+            saveData();
+            renderAllTransactions();
+            renderStockTransactions();
+            closeTransactionModal();
+            updateDashboard();
+            
+            showToast(isEditMode ? 'பரிவர்த்தனை திருத்தப்பட்டது!' : 'பரிவர்த்தனை சேர்க்கப்பட்டது!', 'success');
+        });
+        
+        // Render stocks
+        function renderStocks() {
+            const container = document.getElementById('stocksContainer');
+            container.innerHTML = '';
+            
+            stocks.forEach(stock => {
+                const stockTransactions = transactions.filter(t => t.stockId === stock.id);
+                
+                const profit = stockTransactions
+                    .filter(t => t.type === 'profit')
+                    .reduce((sum, t) => sum + t.amount, 0);
+                
+                const loss = stockTransactions
+                    .filter(t => t.type === 'loss')
+                    .reduce((sum, t) => sum + t.amount, 0);
+                
+                const investment = stockTransactions
+                    .filter(t => t.type === 'investment')
+                    .reduce((sum, t) => sum + t.amount, 0);
+                
+                const withdrawal = stockTransactions
+                    .filter(t => t.type === 'withdrawal')
+                    .reduce((sum, t) => sum + t.amount, 0);
+                
+                const totalInvestment = stock.initialInvestment + investment;
+                const netProfit = profit - loss;
+                const balance = totalInvestment + netProfit - withdrawal;
+                
+                const profitPercentage = totalInvestment > 0 ? ((netProfit / totalInvestment) * 100).toFixed(2) : 0;
+                
+                const card = document.createElement('div');
+                card.className = `stock-card ${stock.id === currentStockId ? 'active' : ''}`;
+                card.style.borderLeft = `5px solid ${stock.color}`;
+                card.innerHTML = `
+                    <div class="stock-header">
+                        <div>
+                            <div class="stock-title">${stock.name}</div>
+                            <div class="stock-company">${stock.company || ''}</div>
+                        </div>
+                        <div class="stock-symbol">${stock.symbol}</div>
+                    </div>
+                    <div class="stock-price ${balance >= stock.initialInvestment ? 'stock-profit' : 'stock-loss'}">
+                        ₹${balance.toFixed(2)}
+                    </div>
+                    <div class="stock-change ${netProfit >= 0 ? 'positive' : 'negative'}">
+                        ${netProfit >= 0 ? '+' : ''}₹${netProfit.toFixed(2)} (${profitPercentage >= 0 ? '+' : ''}${profitPercentage}%)
+                    </div>
+                    ${stock.category ? `<div class="category-badge">${stock.category}</div>` : ''}
+                    <div class="stock-stats">
+                        <div><i class="fas fa-arrow-up" style="color: var(--success);"></i> ₹${profit.toFixed(2)}</div>
+                        <div><i class="fas fa-arrow-down" style="color: var(--danger);"></i> ₹${loss.toFixed(2)}</div>
+                        <div><i class="fas fa-rupee-sign" style="color: var(--secondary);"></i> ₹${totalInvestment.toFixed(2)}</div>
+                    </div>
+                    <p style="font-size: 0.9rem; color: #666; margin-top: 10px;">${stock.description || ''}</p>
+                    <div class="stock-actions">
+                        <button class="btn btn-primary btn-small" onclick="setActiveStock('${stock.id}')">
+                            <i class="fas fa-eye"></i> காண்க
+                        </button>
+                        <button class="btn btn-success btn-small" onclick="openStockModal('${stock.id}')">
+                            <i class="fas fa-edit"></i> திருத்து
+                        </button>
+                        <button class="btn btn-warning btn-small" onclick="exportStockPDF('${stock.id}')">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </button>
+                        <button class="btn btn-danger btn-small" onclick="deleteStock('${stock.id}')">
+                            <i class="fas fa-trash"></i> நீக்கு
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            
+            if (stocks.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #666; grid-column: 1 / -1;">
+                        <i class="fas fa-chart-line" style="font-size: 3rem; margin-bottom: 20px;"></i>
+                        <p class="tamil-text" style="font-size: 1.2rem; margin-bottom: 10px;">பங்குகள் இல்லை</p>
+                        <p class="tamil-text">முதல் பங்கை உருவாக்க "புதிய பங்கு" பட்டனை கிளிக் செய்யவும்</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Render all transactions
+        function renderAllTransactions() {
+            const table = document.getElementById('allTransactionsTable');
+            table.innerHTML = '';
+            
+            const sortedTransactions = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            sortedTransactions.forEach(transaction => {
+                const stock = stocks.find(s => s.id === transaction.stockId);
+                const stockName = stock ? `${stock.name} (${stock.symbol})` : 'தெரியவில்லை';
+                
+                const row = document.createElement('tr');
+                row.className = transaction.type === 'profit' ? 'profit-row' : 'loss-row';
+                
+                const typeText = {
+                    'profit': 'இலாபம்',
+                    'loss': 'நஷ்டம்',
+                    'investment': 'முதலீடு',
+                    'withdrawal': 'பணம் எடுத்தல்'
+                };
+                
+                row.innerHTML = `
+                    <td>${new Date(transaction.date).toLocaleDateString('ta-IN')}</td>
+                    <td><span style="color: ${stock ? stock.color : '#666'}">●</span> ${stockName}</td>
+                    <td>
+                        <div>${transaction.description}</div>
+                        <small style="color: #666;">${typeText[transaction.type] || transaction.type}</small>
+                        ${transaction.category ? `<br><small style="color: #666;">${transaction.category}</small>` : ''}
+                    </td>
+                    <td style="color: var(--success); font-weight: bold;">${transaction.type === 'profit' ? '₹' + transaction.amount.toFixed(2) : '-'}</td>
+                    <td style="color: var(--danger); font-weight: bold;">${transaction.type === 'loss' ? '₹' + transaction.amount.toFixed(2) : '-'}</td>
+                    <td>
+                        <button class="btn btn-success btn-small" onclick="openTransactionModal('${transaction.id}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-danger btn-small" onclick="deleteTransaction('${transaction.id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                table.appendChild(row);
+            });
+            
+            if (transactions.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="6" style="text-align: center; padding: 40px; color: #666;">
+                        <i class="fas fa-file-alt" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                        <p class="tamil-text">பரிவர்த்தனைகள் இல்லை</p>
+                    </td>
+                `;
+                table.appendChild(row);
+            }
+        }
+        
+        // Render stock-specific transactions
+        function renderStockTransactions() {
+            const table = document.getElementById('stockTransactionsTable');
+            const title = document.getElementById('currentStockTitle');
+            table.innerHTML = '';
+            
+            const activeStock = stocks.find(s => s.id === currentStockId);
+            if (!activeStock) {
+                title.textContent = 'பங்கு தேர்ந்தெடுக்கவும்';
+                return;
+            }
+            
+            title.textContent = `${activeStock.name} (${activeStock.symbol}) - பரிவர்த்தனைகள்`;
+            
+            const stockTransactions = transactions.filter(t => t.stockId === currentStockId);
+            const sortedTransactions = [...stockTransactions].sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            let runningBalance = activeStock.initialInvestment;
+            
+            sortedTransactions.forEach(transaction => {
+                if (transaction.type === 'profit') {
+                    runningBalance += transaction.amount;
+                } else if (transaction.type === 'loss') {
+                    runningBalance -= transaction.amount;
+                } else if (transaction.type === 'investment') {
+                    runningBalance += transaction.amount;
+                } else if (transaction.type === 'withdrawal') {
+                    runningBalance -= transaction.amount;
+                }
+                
+                const typeText = {
+                    'profit': 'இலாபம்',
+                    'loss': 'நஷ்டம்',
+                    'investment': 'முதலீடு',
+                    'withdrawal': 'பணம் எடுத்தல்'
+                };
+                
+                const row = document.createElement('tr');
+                row.className = transaction.type === 'profit' ? 'profit-row' : 'loss-row';
+                
+                row.innerHTML = `
+                    <td>${new Date(transaction.date).toLocaleDateString('ta-IN')}</td>
+                    <td>
+                        <div>${transaction.description}</div>
+                        <small style="color: #666;">${typeText[transaction.type] || transaction.type}</small>
+                        ${transaction.category ? `<br><small style="color: #666;">${transaction.category}</small>` : ''}
+                    </td>
+                    <td style="color: var(--success); font-weight: bold;">${transaction.type === 'profit' ? '₹' + transaction.amount.toFixed(2) : '-'}</td>
+                    <td style="color: var(--danger); font-weight: bold;">${transaction.type === 'loss' ? '₹' + transaction.amount.toFixed(2) : '-'}</td>
+                    <td style="font-weight: bold; color: ${runningBalance >= activeStock.initialInvestment ? 'var(--success)' : 'var(--danger)'}">
+                        ₹${runningBalance.toFixed(2)}
+                    </td>
+                    <td>
+                        <button class="btn btn-success btn-small" onclick="openTransactionModal('${transaction.id}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-danger btn-small" onclick="deleteTransaction('${transaction.id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                table.appendChild(row);
+            });
+            
+            if (stockTransactions.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="6" style="text-align: center; padding: 40px; color: #666;">
+                        <i class="fas fa-file-alt" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                        <p class="tamil-text">இந்த பங்கில் பரிவர்த்தனைகள் இல்லை</p>
+                        <p class="tamil-text" style="font-size: 0.9rem; margin-top: 10px;">ஆரம்ப முதலீடு: ₹${activeStock.initialInvestment.toFixed(2)}</p>
+                    </td>
+                `;
+                table.appendChild(row);
+            }
+        }
+        
+        // Set active stock
+        function setActiveStock(stockId) {
+            currentStockId = stockId;
+            renderStocks();
+            renderStockTransactions();
+            updateDashboard();
+            showToast('பங்கு மாற்றப்பட்டது!', 'success');
+        }
+        
+        // Delete stock
+        function deleteStock(stockId) {
+            const stock = stocks.find(s => s.id === stockId);
+            if (!stock) return;
+            
+            if (confirm(`"${stock.name}" பங்கை நிச்சயமாக நீக்க விரும்புகிறீர்களா? இதனுடன் தொடர்புடைய ${transactions.filter(t => t.stockId === stockId).length} பரிவர்த்தனைகளும் நீக்கப்படும்!`)) {
+                stocks = stocks.filter(s => s.id !== stockId);
+                transactions = transactions.filter(t => t.stockId !== stockId);
+                
+                if (currentStockId === stockId) {
+                    currentStockId = stocks.length > 0 ? stocks[0].id : null;
+                }
+                
+                saveData();
+                renderStocks();
+                renderAllTransactions();
+                renderStockTransactions();
+                updateDashboard();
+                
+                showToast('பங்கு நீக்கப்பட்டது!', 'success');
+            }
+        }
+        
+        // Delete transaction
+        function deleteTransaction(transactionId) {
+            const transaction = transactions.find(t => t.id === transactionId);
+            if (!transaction) return;
+            
+            if (confirm('இந்த பரிவர்த்தனையை நீக்க விரும்புகிறீர்களா?')) {
+                transactions = transactions.filter(t => t.id !== transactionId);
+                saveData();
+                renderAllTransactions();
+                renderStockTransactions();
+                updateDashboard();
+                
+                showToast('பரிவர்த்தனை நீக்கப்பட்டது!', 'success');
+            }
+        }
+        
+        // Update dashboard
+        function updateDashboard() {
+            let totalProfit = 0;
+            let totalLoss = 0;
+            let totalInvestment = 0;
+            
+            stocks.forEach(stock => {
+                totalInvestment += stock.initialInvestment;
+                const stockTransactions = transactions.filter(t => t.stockId === stock.id);
+                
+                stockTransactions.forEach(transaction => {
+                    if (transaction.type === 'profit') {
+                        totalProfit += transaction.amount;
+                    } else if (transaction.type === 'loss') {
+                        totalLoss += transaction.amount;
+                    } else if (transaction.type === 'investment') {
+                        totalInvestment += transaction.amount;
+                    }
+                });
+            });
+            
+            const totalBalance = totalInvestment + totalProfit - totalLoss;
+            
+            document.getElementById('totalProfit').textContent = '₹' + totalProfit.toFixed(2);
+            document.getElementById('totalLoss').textContent = '₹' + totalLoss.toFixed(2);
+            document.getElementById('totalBalance').textContent = '₹' + totalBalance.toFixed(2);
+            
+            document.getElementById('totalStocks').textContent = stocks.length;
+            
+            const activeStock = stocks.find(s => s.id === currentStockId);
+            document.getElementById('activeStockName').textContent = activeStock ? `${activeStock.name} (${activeStock.symbol})` : '-';
+            
+            const today = new Date().toISOString().split('T')[0];
+            const todayCount = transactions.filter(t => t.date === today).length;
+            document.getElementById('todayTransactions').textContent = todayCount;
+            
+            updateLastUpdated();
+            updateChart();
+        }
+        
+        // Update last updated time
+        function updateLastUpdated() {
+            lastUpdated = new Date();
+            document.getElementById('lastUpdated').textContent = lastUpdated.toLocaleTimeString('ta-IN');
+        }
+        
+        // Initialize charts
+        function initializeCharts() {
+            const ctx = document.getElementById('financeChart').getContext('2d');
+            financeChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['இலாபம்', 'நஷ்டம்', 'மொத்த முதலீடு'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: [
+                            'rgba(39, 174, 96, 0.8)',
+                            'rgba(231, 76, 60, 0.8)',
+                            'rgba(52, 152, 219, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(39, 174, 96, 1)',
+                            'rgba(231, 76, 60, 1)',
+                            'rgba(52, 152, 219, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: {
+                                    family: "'Latha', 'Tahoma', sans-serif"
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Update chart
+        function updateChart() {
+            if (!financeChart) return;
+            
+            let profit = 0;
+            let loss = 0;
+            let investment = 0;
+            
+            stocks.forEach(stock => {
+                investment += stock.initialInvestment;
+                const stockTransactions = transactions.filter(t => t.stockId === stock.id);
+                
+                stockTransactions.forEach(transaction => {
+                    if (transaction.type === 'profit') {
+                        profit += transaction.amount;
+                    } else if (transaction.type === 'loss') {
+                        loss += transaction.amount;
+                    } else if (transaction.type === 'investment') {
+                        investment += transaction.amount;
+                    }
+                });
+            });
+            
+            financeChart.data.datasets[0].data = [profit, loss, investment];
+            financeChart.update();
+        }
+        
+        // Tab switching
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            event.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+        
+        // Import/Export Functions
+        function showImportExportModal() {
+            document.getElementById('importExportModal').style.display = 'flex';
+            switchImportExportTab('export');
+        }
+        
+        function closeImportExportModal() {
+            document.getElementById('importExportModal').style.display = 'none';
+        }
+        
+        function switchImportExportTab(tabId) {
+            document.querySelectorAll('#importExportModal .tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('#importExportModal .tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            document.querySelector(`#importExportModal .tab[onclick*="${tabId}"]`).classList.add('active');
+            document.getElementById(`${tabId}-tab`).classList.add('active');
+        }
+        
+        // Export all data as JSON
+        function exportAllData() {
+            const data = {
+                stocks: stocks,
+                transactions: transactions,
+                exportDate: new Date().toISOString(),
+                version: '1.0'
+            };
+            
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `tamil_stock_market_${new Date().toISOString().split('T')[0]}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            showToast('அனைத்து தரவும் ஏற்றுமதி செய்யப்பட்டது!', 'success');
+        }
+        
+        // Handle file selection for import
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (!file.name.endsWith('.json')) {
+                showToast('JSON கோப்புகள் மட்டும்!', 'error');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    if (!importedData.stocks || !importedData.transactions) {
+                        showToast('தவறான கோப்பு வடிவம்!', 'error');
+                        return;
+                    }
+                    
+                    window.tempImportedData = importedData;
+                    showToast('கோப்பு படிக்கப்பட்டது. "தரவு இறக்குமதி செய்" கிளிக் செய்யவும்.', 'success');
+                } catch (error) {
+                    showToast('கோப்பு படிக்க முடியவில்லை!', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+        
+        // Import data from JSON file
+        function importData() {
+            if (!window.tempImportedData) {
+                showToast('முதலில் கோப்பை தேர்ந்தெடுக்கவும்!', 'error');
+                return;
+            }
+            
+            const replace = document.getElementById('replaceData').checked;
+            
+            if (replace) {
+                stocks = window.tempImportedData.stocks;
+                transactions = window.tempImportedData.transactions;
+            } else {
+                const existingIds = new Set(stocks.map(s => s.id));
+                window.tempImportedData.stocks.forEach(stock => {
+                    if (!existingIds.has(stock.id)) {
+                        stocks.push(stock);
+                    }
+                });
+                
+                const existingTransactionIds = new Set(transactions.map(t => t.id));
+                window.tempImportedData.transactions.forEach(transaction => {
+                    if (!existingTransactionIds.has(transaction.id)) {
+                        transactions.push(transaction);
+                    }
+                });
+            }
+            
+            saveData();
+            renderStocks();
+            renderAllTransactions();
+            renderStockTransactions();
+            updateDashboard();
+            
+            delete window.tempImportedData;
+            document.getElementById('importFile').value = '';
+            
+            showToast('தரவு வெற்றிகரமாக இறக்குமதி செய்யப்பட்டது!', 'success');
+            closeImportExportModal();
+        }
+        
+        // Create backup
+        function createBackup() {
+            const backupData = {
+                stocks: stocks,
+                transactions: transactions,
+                backupDate: new Date().toISOString(),
+                backupType: 'manual'
+            };
+            
+            localStorage.setItem('tamilStockMarketBackup', JSON.stringify(backupData));
+            showToast('காப்புப்பிரதி எடுக்கப்பட்டது!', 'success');
+            
+            viewBackupInfo();
+        }
+        
+        // Restore from backup
+        function restoreBackup() {
+            const backupData = localStorage.getItem('tamilStockMarketBackup');
+            if (!backupData) {
+                showToast('காப்புப்பிரதி இல்லை!', 'error');
+                return;
+            }
+            
+            if (confirm('காப்புப்பிரதியிலிருந்து மீட்டெடுக்க விரும்புகிறீர்களா? தற்போதைய தரவு மாற்றப்படும்!')) {
+                try {
+                    const backup = JSON.parse(backupData);
+                    stocks = backup.stocks;
+                    transactions = backup.transactions;
+                    
+                    saveData();
+                    renderStocks();
+                    renderAllTransactions();
+                    renderStockTransactions();
+                    updateDashboard();
+                    
+                    showToast('காப்புப்பிரதியிலிருந்து மீட்டெடுக்கப்பட்டது!', 'success');
+                } catch (error) {
+                    showToast('காப்புப்பிரதியை மீட்டெடுக்க முடியவில்லை!', 'error');
+                }
+            }
+        }
+        
+        // View backup info
+        function viewBackupInfo() {
+            const backupData = localStorage.getItem('tamilStockMarketBackup');
+            const infoDiv = document.getElementById('backupInfo');
+            
+            if (!backupData) {
+                infoDiv.innerHTML = '<p class="tamil-text" style="color: #666;">காப்புப்பிரதி இல்லை</p>';
+                infoDiv.style.display = 'block';
+                return;
+            }
+            
+            try {
+                const backup = JSON.parse(backupData);
+                infoDiv.innerHTML = `
+                    <p class="tamil-text"><strong>காப்புப்பிரதி தேதி:</strong> ${new Date(backup.backupDate).toLocaleString('ta-IN')}</p>
+                    <p class="tamil-text"><strong>பங்குகள்:</strong> ${backup.stocks.length}</p>
+                    <p class="tamil-text"><strong>பரிவர்த்தனைகள்:</strong> ${backup.transactions.length}</p>
+                    <p class="tamil-text"><strong>வகை:</strong> ${backup.backupType === 'manual' ? 'கைமுறை' : 'தானியங்கி'}</p>
+                `;
+                infoDiv.style.display = 'block';
+            } catch (error) {
+                infoDiv.innerHTML = '<p class="tamil-text" style="color: #666;">காப்புப்பிரதி தகவலைப் படிக்க முடியவில்லை</p>';
+                infoDiv.style.display = 'block';
+            }
+        }
+        
+        // PDF Export Functions
+        function generatePDFReport() {
+            const modal = document.getElementById('importExportModal');
+            modal.style.display = 'flex';
+            switchImportExportTab('export');
+        }
+        
+        function exportCurrentStockPDF() {
+            if (!currentStockId) {
+                showToast('முதலில் பங்கு தேர்ந்தெடுக்கவும்!', 'error');
+                return;
+            }
+            
+            const stock = stocks.find(s => s.id === currentStockId);
+            if (!stock) return;
+            
+            const printContent = document.createElement('div');
+            printContent.style.padding = '20px';
+            printContent.style.fontFamily = "'Latha', 'Tahoma', sans-serif";
+            
+            const stockTransactions = transactions.filter(t => t.stockId === currentStockId);
+            
+            const profit = stockTransactions.filter(t => t.type === 'profit').reduce((sum, t) => sum + t.amount, 0);
+            const loss = stockTransactions.filter(t => t.type === 'loss').reduce((sum, t) => sum + t.amount, 0);
+            const investment = stockTransactions.filter(t => t.type === 'investment').reduce((sum, t) => sum + t.amount, 0);
+            const withdrawal = stockTransactions.filter(t => t.type === 'withdrawal').reduce((sum, t) => sum + t.amount, 0);
+            
+            const totalInvestment = stock.initialInvestment + investment;
+            const netProfit = profit - loss;
+            const balance = totalInvestment + netProfit - withdrawal;
+            const profitPercentage = totalInvestment > 0 ? ((netProfit / totalInvestment) * 100).toFixed(2) : 0;
+            
+            const typeText = {
+                'profit': 'இலாபம்',
+                'loss': 'நஷ்டம்',
+                'investment': 'முதலீடு',
+                'withdrawal': 'பணம் எடுத்தல்'
+            };
+            
+            printContent.innerHTML = `
+                <h1 style="text-align: center; color: #2c3e50; margin-bottom: 30px;">${stock.name} (${stock.symbol}) - பங்கு அறிக்கை</h1>
+                
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+                    <h2 style="color: #2c3e50;">பங்கு விவரங்கள்</h2>
+                    <p><strong>பங்கு பெயர்:</strong> ${stock.name}</p>
+                    <p><strong>பங்கு சின்னம்:</strong> ${stock.symbol}</p>
+                    <p><strong>நிறுவனம்:</strong> ${stock.company || 'இல்லை'}</p>
+                    <p><strong>வகை:</strong> ${stock.category || 'இல்லை'}</p>
+                    <p><strong>ஆரம்ப முதலீடு:</strong> ₹${stock.initialInvestment.toFixed(2)}</p>
+                    <p><strong>மொத்த முதலீடு:</strong> ₹${totalInvestment.toFixed(2)}</p>
+                    <p><strong>மொத்த இலாபம்:</strong> ₹${profit.toFixed(2)}</p>
+                    <p><strong>மொத்த நஷ்டம்:</strong> ₹${loss.toFixed(2)}</p>
+                    <p><strong>நிகர இலாபம்:</strong> <span style="color: ${netProfit >= 0 ? '#27ae60' : '#e74c3c'}; font-weight: bold;">₹${netProfit.toFixed(2)} (${profitPercentage >= 0 ? '+' : ''}${profitPercentage}%)</span></p>
+                    <p><strong>தற்போதைய மதிப்பு:</strong> <span style="color: ${balance >= totalInvestment ? '#27ae60' : '#e74c3c'}; font-weight: bold;">₹${balance.toFixed(2)}</span></p>
+                    <p><strong>அறிக்கை தேதி:</strong> ${new Date().toLocaleDateString('ta-IN')}</p>
+                </div>
+                
+                <h2 style="color: #2c3e50; margin-bottom: 20px;">பரிவர்த்தனைகள்</h2>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #2c3e50; color: white;">
+                            <th style="padding: 10px; text-align: left;">தேதி</th>
+                            <th style="padding: 10px; text-align: left;">விவரம்</th>
+                            <th style="padding: 10px; text-align: left;">வகை</th>
+                            <th style="padding: 10px; text-align: left;">வகைப்பாடு</th>
+                            <th style="padding: 10px; text-align: left;">தொகை</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${stockTransactions.map(transaction => `
+                            <tr style="border-bottom: 1px solid #ddd;">
+                                <td style="padding: 10px;">${new Date(transaction.date).toLocaleDateString('ta-IN')}</td>
+                                <td style="padding: 10px;">${transaction.description}</td>
+                                <td style="padding: 10px; color: ${transaction.type === 'profit' ? '#27ae60' : transaction.type === 'loss' ? '#e74c3c' : '#3498db'}">
+                                    ${typeText[transaction.type] || transaction.type}
+                                </td>
+                                <td style="padding: 10px;">${transaction.category || '-'}</td>
+                                <td style="padding: 10px; font-weight: bold; color: ${transaction.type === 'profit' ? '#27ae60' : transaction.type === 'loss' ? '#e74c3c' : '#3498db'}">
+                                    ₹${transaction.amount.toFixed(2)}
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                
+                <div style="margin-top: 30px; text-align: center; color: #666; font-size: 0.9rem;">
+                    <p>இந்த அறிக்கை பங்குச்சந்தை மேலாளர் PRO மென்பொருளில் உருவாக்கப்பட்டது</p>
+                    <p>தயாரிப்பு தேதி: ${new Date().toLocaleString('ta-IN')}</p>
+                </div>
+            `;
+            
+            const opt = {
+                margin: [10, 10, 10, 10],
+                filename: `${stock.name}_${stock.symbol}_அறிக்கை_${new Date().toISOString().split('T')[0]}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            
+            html2pdf().set(opt).from(printContent).save();
+            showToast('PDF அறிக்கை பதிவிறக்கம் செய்யப்பட்டது!', 'success');
+        }
+        
+        function exportAllStocksPDF() {
+            if (stocks.length === 0) {
+                showToast('பங்குகள் இல்லை!', 'error');
+                return;
+            }
+            
+            const printContent = document.createElement('div');
+            printContent.style.padding = '20px';
+            printContent.style.fontFamily = "'Latha', 'Tahoma', sans-serif";
+            
+            let totalInitial = 0;
+            let totalProfit = 0;
+            let totalLoss = 0;
+            let totalInvestment = 0;
+            
+            stocks.forEach(stock => {
+                const stockTransactions = transactions.filter(t => t.stockId === stock.id);
+                totalInitial += stock.initialInvestment;
+                totalProfit += stockTransactions.filter(t => t.type === 'profit').reduce((sum, t) => sum + t.amount, 0);
+                totalLoss += stockTransactions.filter(t => t.type === 'loss').reduce((sum, t) => sum + t.amount, 0);
+                totalInvestment += stockTransactions.filter(t => t.type === 'investment').reduce((sum, t) => sum + t.amount, 0);
+            });
+            
+            const totalNetInvestment = totalInitial + totalInvestment;
+            const netProfit = totalProfit - totalLoss;
+            const totalBalance = totalNetInvestment + netProfit;
+            const profitPercentage = totalNetInvestment > 0 ? ((netProfit / totalNetInvestment) * 100).toFixed(2) : 0;
+            
+            printContent.innerHTML = `
+                <h1 style="text-align: center; color: #2c3e50; margin-bottom: 30px;">மொத்த பங்கு அறிக்கை</h1>
+                
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+                    <h2 style="color: #2c3e50;">மொத்த புள்ளிவிவரங்கள்</h2>
+                    <p><strong>மொத்த பங்குகள்:</strong> ${stocks.length}</p>
+                    <p><strong>மொத்த ஆரம்ப முதலீடு:</strong> ₹${totalInitial.toFixed(2)}</p>
+                    <p><strong>மொத்த கூடுதல் முதலீடு:</strong> ₹${totalInvestment.toFixed(2)}</p>
+                    <p><strong>மொத்த முதலீடு:</strong> ₹${totalNetInvestment.toFixed(2)}</p>
+                    <p><strong>மொத்த இலாபம்:</strong> ₹${totalProfit.toFixed(2)}</p>
+                    <p><strong>மொத்த நஷ்டம்:</strong> ₹${totalLoss.toFixed(2)}</p>
+                    <p><strong>நிகர இலாபம்:</strong> <span style="color: ${netProfit >= 0 ? '#27ae60' : '#e74c3c'}; font-weight: bold;">₹${netProfit.toFixed(2)} (${profitPercentage >= 0 ? '+' : ''}${profitPercentage}%)</span></p>
+                    <p><strong>மொத்த மதிப்பு:</strong> <span style="color: ${totalBalance >= totalNetInvestment ? '#27ae60' : '#e74c3c'}; font-weight: bold;">₹${totalBalance.toFixed(2)}</span></p>
+                    <p><strong>அறிக்கை தேதி:</strong> ${new Date().toLocaleDateString('ta-IN')}</p>
+                </div>
+                
+                ${stocks.map(stock => {
+                    const stockTransactions = transactions.filter(t => t.stockId === stock.id);
+                    const profit = stockTransactions.filter(t => t.type === 'profit').reduce((sum, t) => sum + t.amount, 0);
+                    const loss = stockTransactions.filter(t => t.type === 'loss').reduce((sum, t) => sum + t.amount, 0);
+                    const investment = stockTransactions.filter(t => t.type === 'investment').reduce((sum, t) => sum + t.amount, 0);
+                    const withdrawal = stockTransactions.filter(t => t.type === 'withdrawal').reduce((sum, t) => sum + t.amount, 0);
+                    
+                    const totalInvestment = stock.initialInvestment + investment;
+                    const netProfit = profit - loss;
+                    const balance = totalInvestment + netProfit - withdrawal;
+                    const profitPercentage = totalInvestment > 0 ? ((netProfit / totalInvestment) * 100).toFixed(2) : 0;
+                    
+                    return `
+                        <div style="border: 2px solid #ddd; border-radius: 10px; padding: 20px; margin-bottom: 20px; page-break-inside: avoid;">
+                            <h3 style="color: #2c3e50; border-bottom: 2px solid ${stock.color}; padding-bottom: 10px;">
+                                ${stock.name} (${stock.symbol}) - ₹${balance.toFixed(2)}
+                            </h3>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 15px 0;">
+                                <div><strong>நிறுவனம்:</strong> ${stock.company || 'இல்லை'}</div>
+                                <div><strong>வகை:</strong> ${stock.category || 'இல்லை'}</div>
+                                <div><strong>ஆரம்ப முதலீடு:</strong> ₹${stock.initialInvestment.toFixed(2)}</div>
+                                <div><strong>மொத்த முதலீடு:</strong> ₹${totalInvestment.toFixed(2)}</div>
+                                <div><strong>இலாபம்:</strong> ₹${profit.toFixed(2)}</div>
+                                <div><strong>நஷ்டம்:</strong> ₹${loss.toFixed(2)}</div>
+                                <div><strong>நிகர இலாபம்:</strong> <span style="color: ${netProfit >= 0 ? '#27ae60' : '#e74c3c'};">₹${netProfit.toFixed(2)}</span></div>
+                                <div><strong>இலாபம் %:</strong> <span style="color: ${profitPercentage >= 0 ? '#27ae60' : '#e74c3c'};">${profitPercentage >= 0 ? '+' : ''}${profitPercentage}%</span></div>
+                            </div>
+                            <p><strong>விளக்கம்:</strong> ${stock.description || 'இல்லை'}</p>
+                            <p><strong>பரிவர்த்தனைகள்:</strong> ${stockTransactions.length}</p>
+                        </div>
+                    `;
+                }).join('')}
+                
+                <div style="margin-top: 30px; text-align: center; color: #666; font-size: 0.9rem;">
+                    <p>இந்த அறிக்கை பங்குச்சந்தை மேலாளர் PRO மென்பொருளில் உருவாக்கப்பட்டது</p>
+                    <p>தயாரிப்பு தேதி: ${new Date().toLocaleString('ta-IN')}</p>
+                </div>
+            `;
+            
+            const opt = {
+                margin: [10, 10, 10, 10],
+                filename: `அனைத்து_பங்குகள்_அறிக்கை_${new Date().toISOString().split('T')[0]}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            
+            html2pdf().set(opt).from(printContent).save();
+            showToast('அனைத்து பங்குகளின் PDF அறிக்கை பதிவிறக்கம் செய்யப்பட்டது!', 'success');
+        }
+        
+        function exportStockPDF(stockId) {
+            const originalStock = currentStockId;
+            currentStockId = stockId;
+            exportCurrentStockPDF();
+            currentStockId = originalStock;
+        }
+        
+        // Print report
+        function printReport() {
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>பங்கு அறிக்கை</title>
+                    <style>
+                        body { font-family: 'Latha', 'Tahoma', sans-serif; padding: 20px; }
+                        h1 { color: #2c3e50; text-align: center; }
+                        .stock-card { border: 1px solid #000; padding: 15px; margin-bottom: 20px; page-break-inside: avoid; }
+                        .summary { background: #f0f0f0; padding: 15px; margin-bottom: 20px; }
+                    </style>
+                </head>
+                <body>
+                    <h1>பங்கு அறிக்கை - ${new Date().toLocaleDateString('ta-IN')}</h1>
+                    
+                    <div class="summary">
+                        <h2>மொத்த புள்ளிவிவரங்கள்</h2>
+                        <p><strong>மொத்த பங்குகள்:</strong> ${stocks.length}</p>
+                        <p><strong>மொத்த முதலீடு:</strong> ₹${stocks.reduce((sum, s) => sum + s.initialInvestment, 0) + transactions.filter(t => t.type === 'investment').reduce((sum, t) => sum + t.amount, 0)}</p>
+                        <p><strong>மொத்த இலாபம்:</strong> ₹${transactions.filter(t => t.type === 'profit').reduce((sum, t) => sum + t.amount, 0)}</p>
+                        <p><strong>மொத்த நஷ்டம்:</strong> ₹${transactions.filter(t => t.type === 'loss').reduce((sum, t) => sum + t.amount, 0)}</p>
+                    </div>
+                    
+                    ${stocks.map(stock => {
+                        const stockTransactions = transactions.filter(t => t.stockId === stock.id);
+                        const profit = stockTransactions.filter(t => t.type === 'profit').reduce((sum, t) => sum + t.amount, 0);
+                        const loss = stockTransactions.filter(t => t.type === 'loss').reduce((sum, t) => sum + t.amount, 0);
+                        const investment = stockTransactions.filter(t => t.type === 'investment').reduce((sum, t) => sum + t.amount, 0);
+                        
+                        const totalInvestment = stock.initialInvestment + investment;
+                        const netProfit = profit - loss;
+                        const balance = totalInvestment + netProfit;
+                        const profitPercentage = totalInvestment > 0 ? ((netProfit / totalInvestment) * 100).toFixed(2) : 0;
+                        
+                        return `
+                            <div class="stock-card">
+                                <h3>${stock.name} (${stock.symbol}) - ₹${balance.toFixed(2)}</h3>
+                                <p><strong>நிறுவனம்:</strong> ${stock.company || 'இல்லை'}</p>
+                                <p><strong>ஆரம்ப முதலீடு:</strong> ₹${stock.initialInvestment.toFixed(2)}</p>
+                                <p><strong>மொத்த முதலீடு:</strong> ₹${totalInvestment.toFixed(2)}</p>
+                                <p><strong>இலாபம்:</strong> ₹${profit.toFixed(2)}</p>
+                                <p><strong>நஷ்டம்:</strong> ₹${loss.toFixed(2)}</p>
+                                <p><strong>நிகர இலாபம்:</strong> ₹${netProfit.toFixed(2)} (${profitPercentage >= 0 ? '+' : ''}${profitPercentage}%)</p>
+                                <p><strong>பரிவர்த்தனைகள்:</strong> ${stockTransactions.length}</p>
+                            </div>
+                        `;
+                    }).join('')}
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+        }
+        
+        // Share via WhatsApp
+        function shareViaWhatsApp() {
+            if (stocks.length === 0) {
+                showToast('பங்குகள் இல்லை!', 'error');
+                return;
+            }
+            
+            let message = `📈 பங்கு சுருக்கம் - ${new Date().toLocaleDateString('ta-IN')}\n\n`;
+            
+            stocks.forEach((stock, index) => {
+                const stockTransactions = transactions.filter(t => t.stockId === stock.id);
+                const profit = stockTransactions.filter(t => t.type === 'profit').reduce((sum, t) => sum + t.amount, 0);
+                const loss = stockTransactions.filter(t => t.type === 'loss').reduce((sum, t) => sum + t.amount, 0);
+                const investment = stockTransactions.filter(t => t.type === 'investment').reduce((sum, t) => sum + t.amount, 0);
+                
+                const totalInvestment = stock.initialInvestment + investment;
+                const netProfit = profit - loss;
+                const balance = totalInvestment + netProfit;
+                const profitPercentage = totalInvestment > 0 ? ((netProfit / totalInvestment) * 100).toFixed(2) : 0;
+                
+                message += `${index + 1}. ${stock.symbol}: ₹${balance.toFixed(2)} (${profitPercentage >= 0 ? '+' : ''}${profitPercentage}%)\n`;
+            });
+            
+            const totalInitial = stocks.reduce((sum, s) => sum + s.initialInvestment, 0);
+            const totalProfit = transactions.filter(t => t.type === 'profit').reduce((sum, t) => sum + t.amount, 0);
+            const totalLoss = transactions.filter(t => t.type === 'loss').reduce((sum, t) => sum + t.amount, 0);
+            const totalInvestment = transactions.filter(t => t.type === 'investment').reduce((sum, t) => sum + t.amount, 0);
+            
+            const totalNetInvestment = totalInitial + totalInvestment;
+            const netProfit = totalProfit - totalLoss;
+            const totalBalance = totalNetInvestment + netProfit;
+            const profitPercentage = totalNetInvestment > 0 ? ((netProfit / totalNetInvestment) * 100).toFixed(2) : 0;
+            
+            message += `\n📊 மொத்த புள்ளிவிவரங்கள்:`;
+            message += `\n💰 மொத்த முதலீடு: ₹${totalNetInvestment.toFixed(2)}`;
+            message += `\n📈 மொத்த இலாபம்: ₹${totalProfit.toFixed(2)}`;
+            message += `\n📉 மொத்த நஷ்டம்: ₹${totalLoss.toFixed(2)}`;
+            message += `\n✅ நிகர இலாபம்: ₹${netProfit.toFixed(2)} (${profitPercentage >= 0 ? '+' : ''}${profitPercentage}%)`;
+            message += `\n💵 மொத்த மதிப்பு: ₹${totalBalance.toFixed(2)}`;
+            message += `\n\nபங்குச்சந்தை மேலாளர் PRO மென்பொருளில் உருவாக்கப்பட்டது`;
+            
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
+            
+            window.open(whatsappUrl, '_blank');
+        }
+        
+        // Clear all data
+        function clearAllData() {
+            if (confirm('நீங்கள் அனைத்து தரவையும் நிரந்தரமாக நீக்க விரும்புகிறீர்களா? இந்த செயலை மீளமுடியாது!')) {
+                stocks = [];
+                transactions = [];
+                currentStockId = null;
+                
+                localStorage.removeItem('tamilStocksPro');
+                localStorage.removeItem('tamilStockTransactionsPro');
+                
+                renderStocks();
+                renderAllTransactions();
+                renderStockTransactions();
+                updateDashboard();
+                
+                showToast('அனைத்து தரவும் நீக்கப்பட்டது!', 'success');
+            }
+        }
+        
+        // Toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toastMessage.textContent = message;
+            toast.className = 'toast';
+            toast.classList.add(type);
+            
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 10);
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
